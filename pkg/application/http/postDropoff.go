@@ -18,7 +18,7 @@ func (s *Server) PostDropOff(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if journey.Status == types.Asigned {
-		err := s.DataBase.UnlinkCarsByJourney(journey.ID)
+		idCar, seats, err := s.DataBase.UnlinkCarsByJourney(journey.ID)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
@@ -28,7 +28,26 @@ func (s *Server) PostDropOff(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
+
+		nextJourney, err := s.DataBase.GetNextJourneyBySeats(seats)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		if nextJourney.ID > 0 {
+			err = s.DataBase.UpdateCarByJourney(idCar, nextJourney.ID)
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
+			err = s.DataBase.UpdateJourneyStatus(nextJourney.ID)
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
+		}
 		w.WriteHeader(http.StatusOK)
+
 	} else {
 		err = s.DataBase.RemoveJourney(journey)
 		if err != nil {

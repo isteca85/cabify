@@ -67,16 +67,16 @@ func (b *Bbdd) InsertJourney(journey types.Journey) (int64, error) {
 
 func (b *Bbdd) GetFreeCar(people int) (int64, error) {
 	var idCar int64
-	err := b.db.QueryRow("SELECT idCar FROM cabify.cars WHERE ID_Journey IS NULL AND seats >= ? ORDER BY seats LIMIT 1", people).Scan(&idCar)
+	err := b.db.QueryRow("SELECT ID FROM cabify.cars WHERE ID_Journey IS NULL AND seats >= ? ORDER BY seats LIMIT 1", people).Scan(&idCar)
 	if err != nil {
 		return idCar, err
 	}
 	return idCar, nil
 }
 
-func (b *Bbdd) GetNextJourneyByCar(car types.Car) (types.JourneyDB, error) {
+func (b *Bbdd) GetNextJourneyBySeats(seats int) (types.JourneyDB, error) {
 	var journey types.JourneyDB
-	err := b.db.QueryRow("SELECT ID, people, status FROM cabify.journeys WHERE people >= ? AND status = ? ORDER BY interalID", car.Seats, types.Unasigned).Scan(&journey.ID, &journey.People, &journey.Status)
+	err := b.db.QueryRow("SELECT ID, people, status FROM cabify.journeys WHERE people <= ? AND status = ? ORDER BY time", seats, types.Unasigned).Scan(&journey.ID, &journey.People, &journey.Status)
 	if err != nil {
 		return journey, err
 	}
@@ -95,12 +95,18 @@ func (b *Bbdd) UpdateCarByJourney(idCar int64, idJourney int64) error {
 	return nil
 }
 
-func (b *Bbdd) UnlinkCarsByJourney(idJourney int64) error {
-	err := b.db.QueryRow("UPDATE cabify.cars SET ID_Journey = NULL WHERE ID_Journey = ? ", idJourney).Err()
+func (b *Bbdd) UnlinkCarsByJourney(idJourney int64) (int64, int, error) {
+	var idCar int64
+	var seats int
+	err := b.db.QueryRow("SELECT ID, seats FROM cabify.cars WHERE ID_Journey = ?", idJourney).Scan(&idCar, &seats)
 	if err != nil {
-		return err
+		return 0, 0, err
 	}
-	return nil
+	err = b.db.QueryRow("UPDATE cabify.cars SET ID_Journey = NULL WHERE ID_Journey = ? ", idJourney).Err()
+	if err != nil {
+		return 0, 0, err
+	}
+	return idCar, seats, nil
 }
 
 func (b *Bbdd) RemoveJourney(journey types.JourneyDB) error {
@@ -120,6 +126,23 @@ func (b *Bbdd) GetCar(id int64) (types.Car, error) {
 	return car, nil
 }
 
+func (b *Bbdd) GetJourney(id int64) (types.JourneyDB, error) {
+	var journey types.JourneyDB
+	err := b.db.QueryRow("SELECT ID, people, status FROM cabify.journeys WHERE ID = ?", id).Scan(&journey.ID, &journey.People, &journey.Status)
+	if err != nil {
+		return types.JourneyDB{}, err
+	}
+	return journey, nil
+}
+
+func (b *Bbdd) UpdateJourneyStatus(journey int64) error {
+	err := b.db.QueryRow("UPDATE cabify.journeys SET status = ? WHERE ID = ? ", types.Asigned, journey).Err()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (b *Bbdd) GetCarByJourney(id int64) (types.Car, error) {
 	var car types.Car
 	err := b.db.QueryRow("SELECT ID, seats FROM cabify.cars WHERE ID_Journey = ?", id).Scan(&car.ID, &car.Seats)
@@ -127,13 +150,4 @@ func (b *Bbdd) GetCarByJourney(id int64) (types.Car, error) {
 		return types.Car{}, err
 	}
 	return car, nil
-}
-
-func (b *Bbdd) GetJourney(id int64) (types.JourneyDB, error) {
-	var journey types.JourneyDB
-	err := b.db.QueryRow("SELECT * FROM cabify.journeys WHERE ID = ?", id).Scan(&journey.ID, &journey.People, &journey.Status)
-	if err != nil {
-		return types.JourneyDB{}, err
-	}
-	return journey, nil
 }

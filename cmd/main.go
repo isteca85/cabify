@@ -19,7 +19,7 @@ func main() {
 	}
 	defer b.CloseDdbb()
 	log.Println("Cleaning database...")
-	b.CleanDdbb()
+	//b.CleanDdbb()
 
 	log.Println("Init server...")
 	s := &application.Server{}
