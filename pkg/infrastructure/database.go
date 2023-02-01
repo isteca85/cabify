@@ -13,7 +13,6 @@ type DataBase interface {
 	UpdateCarByJourney(idCar int64, idJourney int64) error
 	UnlinkCarsByJourney(idJourney int64) (int64, int, error)
 	RemoveJourney(journey types.JourneyDB) error
-	GetCar(id int64) (types.Car, error)
 	GetJourney(id int64) (types.JourneyDB, error)
 	UpdateJourneyStatus(journey int64) error
 	GetCarByJourney(id int64) (types.Car, error)

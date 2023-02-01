@@ -86,15 +86,6 @@ func (m *MockDB) RemoveJourney(journey types.JourneyDB) error {
 	return nil
 }
 
-func (m *MockDB) GetCar(id int64) (types.Car, error) {
-	for _, car := range m.CarsDB {
-		if car.ID == id {
-			return types.Car{ID: car.ID, Seats: car.Seats}, nil
-		}
-	}
-	return types.Car{}, nil
-}
-
 func (m *MockDB) GetJourney(id int64) (types.JourneyDB, error) {
 	for _, journey := range m.JourneysDB {
 		if journey.ID == id {
