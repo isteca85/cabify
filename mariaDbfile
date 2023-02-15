@@ -1,0 +1,17 @@
+FROM golang:alpine
+
+WORKDIR /usr/src/app
+
+COPY . .
+
+RUN apk --no-cache add ca-certificates
+
+RUN apk update && apk add mariadb mariadb-client
+
+RUN mysql_install_db --user=mysql
+
+COPY mariadb_conf/* /etc/mysql/
+
+RUN go mod tidy
+
+EXPOSE 3909

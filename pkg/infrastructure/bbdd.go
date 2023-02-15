@@ -3,6 +3,7 @@ package infrastructure
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	types "github.com/isteca85/car-pooling-challenge/pkg/domain"
 )
 
@@ -11,14 +12,16 @@ type Bbdd struct {
 }
 
 func (b *Bbdd) OpenDdbb() error {
-	usuario := "root"
-	pass := "RoadToSanSil.2309."
-	host := "tcp(127.0.0.1:3306)"
+	usuario := "web"
+	pass := "cabify-challenge"
+	host := "tcp(mysql:3306)"
 	nombreBaseDeDatos := "cabify"
 	db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@%s/%s", usuario, pass, host, nombreBaseDeDatos))
 	if err != nil {
+		log.Println(err)
 		return err
 	}
+	log.Println("DB opened")
 	b.db = db
 	return nil
 }
@@ -28,11 +31,13 @@ func (b *Bbdd) CloseDdbb() {
 }
 
 func (b *Bbdd) CleanDdbb() error {
-	_, err := b.db.Exec("TRUNCATE TABLE cabify.cars")
+	log.Println("Truncate cars")
+	_, err := b.db.Exec("TRUNCATE TABLE cabify.cars;")
 	if err != nil {
 		return err
 	}
-	_, err = b.db.Exec("DELETE FROM cabify.journeys")
+	log.Println("Delete journeys")
+	_, err = b.db.Exec("DELETE FROM cabify.journeys;")
 	if err != nil {
 		return err
 	}
@@ -40,7 +45,7 @@ func (b *Bbdd) CleanDdbb() error {
 }
 
 func (b *Bbdd) InsertCar(car types.Car) (int64, error) {
-	stmt, err := b.db.Prepare("INSERT INTO cabify.cars (ID, seats) VALUES (?, ?)")
+	stmt, err := b.db.Prepare("INSERT INTO cabify.cars (ID, seats) VALUES (?, ?);")
 	if err != nil {
 		return 0, err
 	}
